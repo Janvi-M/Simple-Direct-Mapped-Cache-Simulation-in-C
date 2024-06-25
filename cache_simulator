@@ -1,0 +1,92 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define CACHE_SIZE 16   // Capacity of the cache memory
+#define BLOCK_SIZE 1    // Block size in words
+#define MAIN_MEM_SIZE 256  // Size of main memory
+
+// Cache block structure
+typedef struct {
+    int valid;
+    int tag;
+    int data;
+} CacheBlock;
+
+// Function prototypes
+void initCache(CacheBlock cache[], int size);
+void accessMemory(int address, CacheBlock cache[], int *hits, int *misses, int *evictions);
+void printCache(CacheBlock cache[], int size);
+
+int main() {
+    CacheBlock cache[CACHE_SIZE];
+    int hits = 0, misses = 0, evictions = 0;
+    int address;
+
+    // Initialize cache
+    initCache(cache, CACHE_SIZE);
+
+    // Input module to accept memory addresses
+    printf("Enter memory addresses (-1 to end):\n");
+    while (1) {
+        printf("> ");
+        scanf("%d", &address);
+        if (address == -1) break;
+
+        // Access memory and update cache
+        accessMemory(address, cache, &hits, &misses, &evictions);
+        // Print cache contents
+        printCache(cache, CACHE_SIZE);
+    }
+
+    // Output statistics
+    printf("\nHits: %d\nMisses: %d\nEvictions: %d\n", hits, misses, evictions);
+
+    return 0;
+}
+
+// Initialize cache
+void initCache(CacheBlock cache[], int size) {
+    for (int i = 0; i < size; i++) {
+        cache[i].valid = 0;
+        cache[i].tag = -1;
+        cache[i].data = 0;
+    }
+}
+
+// Access memory and update cache
+void accessMemory(int address, CacheBlock cache[], int *hits, int *misses, int *evictions) {
+    // Calculate index and tag
+    int index = address % CACHE_SIZE;
+    int tag = address / CACHE_SIZE;
+
+    // Check if cache hit
+    if (cache[index].valid && cache[index].tag == tag) {
+        (*hits)++;
+        printf("Cache Hit\n");
+    } else {
+        (*misses)++;
+        // Check if cache block needs to be evicted
+        if (cache[index].valid) {
+            (*evictions)++;
+            printf("Cache Eviction\n");
+        }
+        // Update cache block
+        cache[index].valid = 1;
+        cache[index].tag = tag;
+        cache[index].data = address;
+        printf("Cache Miss\n");
+    }
+}
+
+// Print cache contents
+void printCache(CacheBlock cache[], int size) {
+    printf("Cache Contents:\n");
+    printf("+-------+-------+------------+\n");
+    printf("| Index | Valid |   Data     |\n");
+    printf("+-------+-------+------------+\n");
+    for (int i = 0; i < size; i++) {
+        printf("|  %-4d |   %-3d | %-10d |\n", i, cache[i].valid, cache[i].data);
+    }
+    printf("+-------+-------+------------+\n");
+}
+
